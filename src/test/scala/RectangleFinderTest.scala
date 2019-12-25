@@ -22,30 +22,6 @@ class RectangleFinderTest extends org.scalatest.FunSuite {
     sets.flatMap(_._3).toSet.toList
   }
 
-  /*
-  test("OrderedPoints") {
-
-    sets.foreach(e => {
-      val (name, isRect, points) = e
-      println("Ordering " + name + ": " + points + " => " + RectangleFinder.orderPoints(points))
-    })
-  }
-
-  test("CheckRectangle") {
-
-    var ok = sets.length
-
-    sets.foreach(e => {
-      val (name, isRect, points) = e
-      val testRect = RectangleFinder.isRectangle(points)
-      println("Testing " + name + ": " + testRect + "/" + isRect)
-
-      if (testRect != isRect) ok = ok-1
-    })
-
-    assert(ok == sets.length)
-  }*/
-
   test("CheckRectangles") {
 
     var ok = sets.length
@@ -63,6 +39,7 @@ class RectangleFinderTest extends org.scalatest.FunSuite {
 
   test("CheckRectangle") {
     assert(!RectangleFinder.isRectangle(Point(-5.0, 0.0),Point(-5.0, 5.0),Point(5.0, -5.0),Point(5.0, 0.0)))
+    assert(!RectangleFinder.isRectangle(Point(6.0, 9.0),Point(8.0, 8.0),Point(11.0, 14.0),Point(12.0, 12.0)))
   }
 
   test("MatchRectangles") {

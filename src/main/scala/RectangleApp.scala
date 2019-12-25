@@ -18,7 +18,14 @@ class DrawPane(width: Int, height: Int) extends Canvas(width, height) {
 
   val gc = graphicsContext2D
 
-  var points = scala.collection.mutable.Set[Point]()
+  val points = scala.collection.mutable.Set[Point]()
+  var rects: List[(Point, Point, Point, Point)] = Nil
+
+  def pointToXY(p: Point): (Double, Double) =
+    (p.x * scale + width / 2, height / 2 - p.y * scale)
+
+  def pointFromMouse(x: Double, y: Double): Point =
+    Point(Math.round((x - width / 2) / scale), Math.round((height / 2 - y) / scale))
 
   def drawBackground() = {
 
@@ -42,13 +49,6 @@ class DrawPane(width: Int, height: Int) extends Canvas(width, height) {
 
   }
 
-  def pointToXY(p: Point): (Double, Double) = {
-    val x = p.x * scale + width / 2
-    val y = height / 2 - p.y * scale
-
-    (x, y)
-  }
-
   def drawPoint(p: Point): Unit = {
     val (x, y) = pointToXY(p)
 
@@ -56,21 +56,18 @@ class DrawPane(width: Int, height: Int) extends Canvas(width, height) {
     gc.strokeRect(x-1, y-1, 2, 2)
   }
 
-  def pointFromMouse(x: Double, y: Double): Point = {
-    val px = Math.round((x - width / 2) / scale)
-    val py = Math.round((height / 2 - y) / scale)
-    Point(px, py)
-  }
-
-  def drawPoints(points: Iterable[Point]) =
+  def drawPoints() =
     points.foreach(drawPoint)
 
-  def drawRect(rect: (Point, Point, Point, Point)) = {
+  def drawRect(rect: (Point, Point, Point, Point), color: Color = Navy, highlight: Boolean = false) = {
     val (a, b, c, d) = rect
 
-    gc.stroke = Red
-    gc.beginPath()
+    if (highlight) {
+      gc.save()
+      gc.setGlobalAlpha(0.5)
+    }
 
+    gc.beginPath()
     val (ax, ay) = pointToXY(a)
     gc.moveTo(ax, ay)
     val (bx, by) = pointToXY(b)
@@ -80,21 +77,32 @@ class DrawPane(width: Int, height: Int) extends Canvas(width, height) {
     val (dx, dy) = pointToXY(c)
     gc.lineTo(dx, dy)
     gc.lineTo(ax, ay)
+    gc.closePath()
 
-    gc.strokePath()
-    // gc.closePath()
+    gc.stroke = color
+    if (highlight) {
+      gc.fill = color
+      gc.fillPath()
+      gc.restore()
+    } else {
+      gc.strokePath()
+    }
   }
 
-  def drawRects(points: List[Point]): Unit = {
-    drawPoints(points)
+  def drawRects(): Unit = {
 
-    val rects: List[(Point, Point, Point, Point)] = RectangleFinder.matchRectangles(points.toList)
-    val (plen, rlen) = (points.length, rects.length)
+    rects.foreach(drawRect(_, Black))
+    drawPoints()
 
-    rects.foreach(drawRect)
+    val (plen, rlen) = (points.size, rects.length)
 
     gc.stroke = Gray
     gc.strokeText(s"$rlen rectangle(s) out of $plen points.", 8, height - 40)
+  }
+
+  def refreshRects(): Unit = {
+    rects = RectangleFinder.matchRectangles(points.toList)
+    currentRect = 0
   }
 
   onMousePressed = (me: MouseEvent) => {
@@ -105,9 +113,11 @@ class DrawPane(width: Int, height: Int) extends Canvas(width, height) {
     else
       points.add(mp)
 
+    refreshRects()
+
     drawBackground()
-    drawPoints(points)
-    drawRects(points.toList)
+    drawPoints()
+    drawRects()
   }
 
   onMouseMoved = (me: MouseEvent) => {
@@ -122,14 +132,43 @@ class DrawPane(width: Int, height: Int) extends Canvas(width, height) {
   }
 
   def reset: Unit = {
-    points = scala.collection.mutable.Set[Point]()
+    points.clear()
+    rects = Nil
 
     drawBackground()
-    drawRects(points.toList)
+  }
+
+  def dump: Unit = {
+    println("points = " + points.mkString("[", ", ", "]"))
+    println("rects = " + rects.mkString("[", ", ", "]"))
+  }
+
+  var currentRect: Int = 0
+
+  def rotateLeft: Unit = {
+    if (!rects.isEmpty) {
+      drawBackground()
+      drawRects()
+      drawRect(rects(currentRect), Red, true)
+      currentRect += 1
+      if (currentRect >= rects.length) currentRect = 0
+      drawPoints()
+    }
+  }
+
+  def rotateRight: Unit = {
+    if (!rects.isEmpty) {
+      drawBackground()
+      drawRects()
+      drawRect(rects(currentRect), Red, true)
+      currentRect -= 1
+      if (currentRect < 0) currentRect = rects.length - 1
+      drawPoints()
+    }
   }
 
   drawBackground()
-  drawRects(points.toList)
+  drawRects()
 
 }
 
@@ -147,13 +186,27 @@ object RectangleApp extends JFXApp {
       fill = White
 
       val panel = new DrawPane(w, h)
-      val resetButton = new Button("Réinitialiser")
-      resetButton.setLayoutX(10)
-      resetButton.setLayoutY(10)
-      resetButton.onAction = handle  {
-          panel.reset
+      val resetButton = new Button("Réinitialiser") {
+        layoutX = 10
+        layoutY = 10
+        onAction = handle { panel.reset }
       }
-      content = new Group(panel, resetButton)
+      val dumpButton = new Button("Générer...") {
+        layoutX = 10
+        layoutY = 70
+        onAction = handle { panel.dump }
+      }
+      val highlightLeft = new Button("<<") {
+        layoutX = 10
+        layoutY = 40
+        onAction = handle { panel.rotateLeft }
+      }
+      val highlightRight = new Button(">>") {
+        layoutX = 64
+        layoutY = 40
+        onAction = handle { panel.rotateRight }
+      }
+      content = new Group(panel, resetButton, highlightLeft, highlightRight, dumpButton)
     }
   }
 }

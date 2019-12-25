@@ -9,7 +9,7 @@ object RectangleFinder {
     val cd2 = c.squareDistanceTo(d)
     val da2 = d.squareDistanceTo(a)
 
-    ((ab2 == cd2) && (bc2 == da2) && isOrthogonal(a, b, c) && isOrthogonal(c, d, a))
+    (ab2 == cd2) && (bc2 == da2) && isOrthogonal(a, b, d) && isOrthogonal(b, d, c)
   }
 
   def isOrthogonal(a: Point, b: Point, c: Point): Boolean = {
