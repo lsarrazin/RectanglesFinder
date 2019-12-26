@@ -7,6 +7,9 @@ scalaVersion := "2.13.1"
 // Append -deprecation to the options passed to the Scala compiler
 scalacOptions ++= Seq("-deprecation", "-feature")
 
+// Add parallel collections to speed up computation
+libraryDependencies += "org.scala-lang.modules" %% "scala-parallel-collections" % "0.2.0"
+
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.8" % "test"
 
 // Add ScalaFX dependency, exclude JavaFX transitive dependencies, may not mach this OS
