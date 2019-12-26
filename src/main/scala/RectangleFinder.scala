@@ -1,5 +1,8 @@
 package RectangleTest
 
+import scala.collection.parallel.CollectionConverters._
+import scala.collection.parallel.immutable.ParSeq
+
 object RectangleFinder {
 
   def isRectangle(au: Point, bu: Point, cu: Point, du: Point): Boolean = {
@@ -9,7 +12,7 @@ object RectangleFinder {
     val cd2 = c.squareDistanceTo(d)
     val da2 = d.squareDistanceTo(a)
 
-    (ab2 == cd2) && (bc2 == da2) && isOrthogonal(a, b, d) && isOrthogonal(b, d, c)
+    (ab2 == cd2) && (bc2 == da2) && isOrthogonal(a, b, c) && isOrthogonal(b, c, d)
   }
 
   def isOrthogonal(a: Point, b: Point, c: Point): Boolean = {
@@ -23,9 +26,9 @@ object RectangleFinder {
   }
 
   def sortPoints(a: Point, b: Point, c: Point, d: Point): (Point, Point, Point, Point) = {
-    if ((a.x > b.x) || ((a.x == b.x) && (a.y > b.y))) sortPoints(b, a, c, d)
-    else if ((b.x > c.x) || ((b.x == c.x) && (b.y > c.y))) sortPoints(a, c, b, d)
-    else if ((c.x > d.x) || ((c.x == d.x) && (c.y > d.y))) sortPoints(a, b, d, c)
+    if ((a.x > b.x) || ((a.x == b.x) && (a.y < b.y))) sortPoints(b, a, c, d)
+    else if ((b.x > c.x) || ((b.x == c.x) && (b.y < c.y))) sortPoints(a, c, b, d)
+    else if ((c.x > d.x) || ((c.x == d.x) && (c.y < d.y))) sortPoints(a, b, d, c)
     else (a, b, c, d)
   }
 
@@ -33,10 +36,9 @@ object RectangleFinder {
     if (points.length < 4)
       Nil
     else {
-
       val matches =
       for {
-        a <- points
+        a <- points.par
         b <- points.tail if (a != b)
         c <- points.tail.tail if ((a != c) && (b != c) && isOrthogonal(a, b, c))
         d <- points.tail.tail.tail if ((a != d) && (b != d) && (c != d) && isRectangle(a, b, c, d))
