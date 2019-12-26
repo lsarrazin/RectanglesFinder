@@ -1,16 +1,16 @@
 import RectangleTest.Point
 import RectangleTest.RectangleFinder
-import javafx.event.EventHandler
+
 import scalafx.application.JFXApp
 import scalafx.Includes._
-import scalafx.event.ActionEvent
-import scalafx.scene.canvas.{Canvas, GraphicsContext}
+import scalafx.scene.canvas.Canvas
 import scalafx.scene.control.Button
-import scalafx.scene.{Group, Node, Scene}
+import scalafx.scene.{Group, Scene}
 import scalafx.scene.input.MouseEvent
 import scalafx.scene.paint.Color
 import scalafx.scene.paint.Color._
-import scalafx.scene.shape.{Line, Rectangle}
+
+import scala.collection.mutable
 
 class DrawPane(width: Int, height: Int) extends Canvas(width, height) {
 
@@ -18,8 +18,8 @@ class DrawPane(width: Int, height: Int) extends Canvas(width, height) {
 
   val gc = graphicsContext2D
 
-  val points = scala.collection.mutable.Set[Point]()
-  var rects: List[(Point, Point, Point, Point)] = Nil
+  val points = mutable.Set.empty[Point]
+  val rects = mutable.Set.empty[(Point, Point, Point, Point)]
 
   def pointToXY(p: Point): (Double, Double) =
     (p.x * scale + width / 2, height / 2 - p.y * scale)
@@ -28,7 +28,6 @@ class DrawPane(width: Int, height: Int) extends Canvas(width, height) {
     Point(Math.round((x - width / 2) / scale), Math.round((height / 2 - y) / scale))
 
   def drawBackground() = {
-
     gc.fill = Wheat
     gc.fillRect(0, 0, width, height)
 
@@ -46,7 +45,6 @@ class DrawPane(width: Int, height: Int) extends Canvas(width, height) {
 
     gc.strokeLine(width / 2, height, width / 2, 0)
     gc.strokeLine(0, height / 2, width, height / 2)
-
   }
 
   def drawPoint(p: Point): Unit = {
@@ -94,23 +92,29 @@ class DrawPane(width: Int, height: Int) extends Canvas(width, height) {
     rects.foreach(drawRect(_, Black))
     drawPoints()
 
-    val (plen, rlen) = (points.size, rects.length)
+    val (plen, rlen) = (points.size, rects.size)
 
     gc.stroke = Gray
     gc.strokeText(s"$rlen rectangle(s) out of $plen points.", 8, height - 40)
   }
 
   def refreshRects(): Unit = {
-    rects = RectangleFinder.matchRectangles(points.toList)
+    rects.clear()
+    rects ++= RectangleFinder.matchRectangles(points.toSet)
+    currentRect = 0
+  }
+
+  def refreshRects(p: Point): Unit = {
+    val newRects = RectangleFinder.rematchRectangles(p, points.toSet, rects.toSet)
+    rects ++ newRects
     currentRect = 0
   }
 
   onMousePressed = (me: MouseEvent) => {
     val mp = pointFromMouse(me.sceneX, me.sceneY)
-
     if (points.contains(mp))
       points.remove(mp)
-    else
+     else
       points.add(mp)
 
     refreshRects()
@@ -133,8 +137,7 @@ class DrawPane(width: Int, height: Int) extends Canvas(width, height) {
 
   def reset: Unit = {
     points.clear()
-    rects = Nil
-
+    rects.clear()
     drawBackground()
   }
 
@@ -145,24 +148,37 @@ class DrawPane(width: Int, height: Int) extends Canvas(width, height) {
 
   var currentRect: Int = 0
 
+  def nthRect(n: Int): (Point, Point, Point, Point) = {
+    if ((n < 0) || (n >= rects.size))
+      (Point(0,0), Point(0,0), Point(0,0), Point(0,0))
+    else {
+      if (n == 0)
+        rects.head
+      else
+        rects.take(n).last
+    }
+  }
+
   def rotateLeft: Unit = {
     if (!rects.isEmpty) {
+      currentRect += 1
+      if (currentRect >= rects.size) currentRect = 0
+
       drawBackground()
       drawRects()
-      drawRect(rects(currentRect), Red, true)
-      currentRect += 1
-      if (currentRect >= rects.length) currentRect = 0
+      drawRect(nthRect(currentRect), Red, highlight = true)
       drawPoints()
     }
   }
 
   def rotateRight: Unit = {
     if (!rects.isEmpty) {
+      currentRect -= 1
+      if (currentRect < 0) currentRect = rects.size - 1
+
       drawBackground()
       drawRects()
-      drawRect(rects(currentRect), Red, true)
-      currentRect -= 1
-      if (currentRect < 0) currentRect = rects.length - 1
+      drawRect(nthRect(currentRect), Red, highlight = true)
       drawPoints()
     }
   }
