@@ -7,8 +7,9 @@ scalaVersion := "2.13.1"
 // Append -deprecation to the options passed to the Scala compiler
 scalacOptions ++= Seq("-deprecation", "-feature")
 
-// Add parallel collections to speed up computation
+// Add parallel & contrib collections to speed up computation
 libraryDependencies += "org.scala-lang.modules" %% "scala-parallel-collections" % "0.2.0"
+libraryDependencies += "org.scala-lang.modules" %% "scala-collection-contrib" % "0.2.1"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.8" % "test"
 
@@ -23,6 +24,7 @@ val osName = System.getProperty("os.name") match {
   case n if n.startsWith("Windows") => "win"
   case _ => throw new Exception("Unknown platform!")
 }
+
 libraryDependencies ++= javafxModules.map(m => "org.openjfx" % s"javafx-$m" % "12.0.2" classifier osName)
 
 // Fork a new JVM for 'run' and 'test:run'
