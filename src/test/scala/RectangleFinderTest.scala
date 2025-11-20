@@ -70,6 +70,16 @@ class RectangleFinderTest extends org.scalatest.FunSuite {
     println(" -> " + rects.size + " rectangles")
   }
 
+  test("SortPoints") {
+    val p1 = Point(0, 0)
+    val p2 = Point(0, 1)
+    val p3 = Point(1, 0)
+    val p4 = Point(1, 1)
+
+    val sorted = RectangleFinder.sortPoints(p4, p2, p3, p1)
+    assert(sorted == (p1, p2, p3, p4))
+  }
+
   test("Spiral rotation") {
 
     var prev: Point = Point(0, 0)

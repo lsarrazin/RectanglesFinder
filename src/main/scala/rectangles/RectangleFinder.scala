@@ -55,12 +55,9 @@ object RectangleFinder {
    * @param d fourth point
    * @return abcd ordered
    */
-  @tailrec
   def sortPoints(a: Point, b: Point, c: Point, d: Point): (Point, Point, Point, Point) = {
-    if ((a.x > b.x) || ((a.x == b.x) && (a.y < b.y))) sortPoints(b, a, c, d)
-    else if ((b.x > c.x) || ((b.x == c.x) && (b.y < c.y))) sortPoints(a, c, b, d)
-    else if ((c.x > d.x) || ((c.x == d.x) && (c.y < d.y))) sortPoints(a, b, d, c)
-    else (a, b, c, d)
+    val points = List(a, b, c, d).sortBy(p => (p.x, p.y))
+    (points(0), points(1), points(2), points(3))
   }
 
   def rematchRectangles(newPoint: Point, points: Iterable[Point]): Iterable[(Point, Point, Point, Point)] = {
