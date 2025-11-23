@@ -8,6 +8,8 @@ import scalafx.scene.paint.Color
 import scalafx.scene.paint.Color.{Black, Blue, Gray, LightBlue, Navy, Red, Wheat}
 
 import scala.collection.mutable
+import rectangles.Rectangle
+import org.w3c.dom.css.Rect
 
 class DrawPane(width: Int, height: Int) extends Canvas(width, height) {
 
@@ -16,7 +18,7 @@ class DrawPane(width: Int, height: Int) extends Canvas(width, height) {
   val gc: GraphicsContext = graphicsContext2D
 
   val points = mutable.Set.empty[Point]
-  val rects = mutable.Set.empty[(Point, Point, Point, Point)]
+  var rects = List.empty[Rectangle]
 
   def pointToXY(p: Point): (Double, Double) =
     (p.x * scale + width / 2, height / 2 - p.y * scale)
@@ -54,8 +56,8 @@ class DrawPane(width: Int, height: Int) extends Canvas(width, height) {
   def drawPoints(): Unit =
     points.foreach(drawPoint)
 
-  def drawRect(rect: (Point, Point, Point, Point), color: Color = Navy, highlight: Boolean = false): Unit = {
-    val (a, b, c, d) = rect
+  def drawRect(rect: Rectangle, color: Color = Navy, highlight: Boolean = false): Unit = {
+    val (a, b, c, d) = rect.toTuple
 
     if (highlight) {
       gc.save()
@@ -85,9 +87,8 @@ class DrawPane(width: Int, height: Int) extends Canvas(width, height) {
   }
 
   def refreshRects(): Unit = {
-    rects.clear()
-    // rects.addAll(RectangleFinder.matchRectangles(points.toSet))
-    rects.addAll(GVectorMap.matchRectangle2(points))
+    // rects = RectangleFinder.matchRectangles(points.toSet).toList
+    rects = GVectorMap.matchRectangles(points).toList
     currentRect = 0
   }
 
@@ -107,13 +108,13 @@ class DrawPane(width: Int, height: Int) extends Canvas(width, height) {
       drawPoint(mp)
 
       //val newRects = RectangleFinder.rematchRectangles(mp, points)
-      val newRects = GVectorMap.matchRectangle2(points)
+      val newRects = GVectorMap.matchRectangles(points)
+      rects = newRects.toList
       drawRects(newRects)
-      //rects.addAll(newRects)
-      rects.clear()
-      rects.addAll(newRects)
       currentRect = rects.size - 1
     }
+
+    drawStats()
   }
 
   onMouseMoved = (me: MouseEvent) => {
@@ -124,39 +125,36 @@ class DrawPane(width: Int, height: Int) extends Canvas(width, height) {
     gc.fillRect(width - 80, height - 56, 80, 56)
     gc.stroke = Gray
     gc.strokeText(s"${mp.x}, ${mp.y}", width - 76, height - 40)
-
   }
 
   def reset(): Unit = {
     points.clear()
-    rects.clear()
+    rects = List.empty
     drawBackground()
   }
 
   def dump(): Unit = {
-    println("points = " + points.mkString("[", ", ", "]"))
-    println("rects = " + rects.mkString("[", ", ", "]"))
+    println("points (" + points.size + ") = " + points.mkString("[", ", ", "]"))
+    println("rects (" + rects.size + ") = " + rects.mkString("[", ", ", "]"))
   }
 
   var currentRect: Int = 0
 
-  def nthRect(n: Int): (Point, Point, Point, Point) = {
+  def nthRect(n: Int): Rectangle = {
     if ((n < 0) || (n >= rects.size))
-      (Point(0, 0), Point(0, 0), Point(0, 0), Point(0, 0))
-    else {
-      if (n == 0)
-        rects.head
-      else
-        rects.take(n).last
-    }
+      Rectangle(Point(0, 0), Point(0, 0), Point(0, 0), Point(0, 0))
+    else
+      rects(n)
   }
 
-  def drawRects(rects: Iterable[(Point, Point, Point, Point)]): Unit = {
-
+  def drawRects(rects: Iterable[Rectangle]): Unit = {
     rects.foreach(drawRect(_, Black))
     drawPoints()
+  }
 
-    val (plen, rlen) = (points.size, this.rects.size)
+  def drawStats(): Unit = {
+
+    val (plen, rlen) = (points.size, rects.size)
 
     gc.stroke = Wheat
     gc.fill = Wheat
@@ -165,31 +163,45 @@ class DrawPane(width: Int, height: Int) extends Canvas(width, height) {
     gc.strokeText(s"$rlen rectangle(s) / $plen points.", 8, height - 40)
   }
 
-  def rotateRight(): Unit = {
+  def drawRectSelection(): Unit = {
+    val crect = nthRect(currentRect)
+    drawRect(crect, Red, highlight = true)
+  
+    gc.stroke = Wheat
+    gc.fill = Wheat
+    gc.fillRect(100, 8, 180, 16)
+    gc.stroke = Blue
+    gc.strokeText(s"${currentRect+1} / ${rects.size} => ${crect}", 100, 16)
+  }
+
+  def rotateLeft(): Unit = {
     if (rects.nonEmpty) {
       currentRect -= 1
       if (currentRect < 0) currentRect = rects.size - 1
 
       drawBackground()
       drawRects(rects)
-      drawRect(nthRect(currentRect), Red, highlight = true)
+      drawRectSelection()
       drawPoints()
+      drawStats()
     }
   }
 
-  def rotateLeft(): Unit = {
+  def rotateRight(): Unit = {
     if (rects.nonEmpty) {
       currentRect += 1
       if (currentRect >= rects.size) currentRect = 0
 
       drawBackground()
-      drawRects(rects.toSet)
-      drawRect(nthRect(currentRect), Red, highlight = true)
+      drawRects(rects)
+      drawRectSelection()
       drawPoints()
+      drawStats()
     }
   }
 
   drawBackground()
   drawRects(rects)
+  drawStats()
 
 }

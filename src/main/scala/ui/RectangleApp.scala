@@ -5,6 +5,7 @@ import scalafx.application.JFXApp
 import scalafx.scene.control.Button
 import scalafx.scene.paint.Color.White
 import scalafx.scene.{Group, Scene}
+import scalafx.scene.text.Text
 
 object RectangleApp extends JFXApp {
   val w = 1200
