@@ -1,20 +1,19 @@
 package rectangles
 
-import scala.annotation.tailrec
-
 case class Rectangle(a: Point, b: Point, c: Point, d: Point) {
   def toTuple: (Point, Point, Point, Point) = (a, b, c, d)
-
 }
 
 object Rectangle {
 
-  @tailrec
-  final def sortPoints(a: Point, b: Point, c: Point, d: Point): (Point, Point, Point, Point) = {
-    if ((a.x > b.x) || ((a.x == b.x) && (a.y < b.y))) sortPoints(b, a, c, d)
-    else if ((b.x > c.x) || ((b.x == c.x) && (b.y < c.y))) sortPoints(a, c, b, d)
-    else if ((c.x > d.x) || ((c.x == d.x) && (c.y < d.y))) sortPoints(a, b, d, c)
-    else (a, b, c, d)
+  /**
+   * Sorts four points into a canonical order: primarily by x-coordinate, secondarily by y-coordinate.
+   */
+  private def sortPoints(p1: Point, p2: Point, p3: Point, p4: Point): (Point, Point, Point, Point) = {
+    val sorted = List(p1, p2, p3, p4).sortWith((pA, pB) =>
+      if (pA.x != pB.x) pA.x < pB.x else pA.y < pB.y
+    )
+    (sorted(0), sorted(1), sorted(2), sorted(3))
   }
 
   /**

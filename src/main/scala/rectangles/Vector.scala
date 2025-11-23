@@ -81,22 +81,4 @@ object GVectorMap {
     }.seq
   }
 
-  def matchRectangle2(points: Iterable[Point]): Iterable[(Point, Point, Point, Point)] = {
-    val vmap = GVectorMap(points).innerMap
-
-    // Fetch list of directions that has more than one entry
-    val eligibleDirs: Iterable[Direction] =
-      vmap.filterSets { case (_: Direction, vs: Set[GVector]) => vs.size > 1 }.keySet
-
-    // From this list, try all associations leading to rectangles
-    eligibleDirs.par.flatMap { d =>
-      val vectors = vmap.get(d)
-      for {
-        v1 <- vectors
-        v2 <- vectors.tail if v2 != v1
-        r <- Rectangle.rectangleFrom(v1, v2)
-      } yield r.toTuple
-    }.seq
-  }
-
 }
