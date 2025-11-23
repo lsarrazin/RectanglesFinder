@@ -9,11 +9,18 @@ object Rectangle {
   /**
    * Sorts four points into a canonical order: primarily by x-coordinate, secondarily by y-coordinate.
    */
-  private def sortPoints(p1: Point, p2: Point, p3: Point, p4: Point): (Point, Point, Point, Point) = {
+  def sortPoints(p1: Point, p2: Point, p3: Point, p4: Point): (Point, Point, Point, Point) = {
     val sorted = List(p1, p2, p3, p4).sortWith((pA, pB) =>
       if (pA.x != pB.x) pA.x < pB.x else pA.y < pB.y
     )
     (sorted(0), sorted(1), sorted(2), sorted(3))
+  }
+
+  def isRectangle(p1: Point, p2: Point, p3: Point, p4: Point): Boolean = {
+    val (a, b, c, d) = sortPoints(p1, p2, p3, p4)
+    val v1 = GVector(a, b)
+    val v2 = GVector(c, d)
+    GVector(v1.center, v2.center).isOrthogonalTo(v1)
   }
 
   /**

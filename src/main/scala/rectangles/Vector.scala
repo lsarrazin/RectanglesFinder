@@ -9,23 +9,22 @@ case class Direction(x: Double, y: Double) {
 }
 
 case class GVector(a: Point, b: Point) {
-  lazy val canonize: Direction = {
-    val cx = x
-    val cy = y
 
-    (cx >= 0, cy >= 0) match {
-      case (true, true) => Direction(cx, cy)
-      case (true, false) => if (cx == 0) Direction(cx, -cy) else Direction(cx, cy)
-      case (false, true) => Direction(-cx, -cy)
-      case (false, false) => Direction(-cx, -cy)
+  val x: Double = b.x - a.x
+  val y: Double = b.y - a.y
+
+  lazy val canonize: Direction = {
+    (x >= 0, y >= 0) match {
+      case (true, true) => Direction(x, y)
+      case (true, false) => if (x == 0) Direction(x, -y) else Direction(x, y)
+      case (false, true) => Direction(-x, -y)
+      case (false, false) => Direction(-x, -y)
     }
   }
 
   lazy val squareNorm: Double = (x * x) + (y * y) // x2 + y2
-  val x: Double = b.x - a.x
-  val y: Double = b.y - a.y
 
-  def center: Point = Point(a.x + x / 2, a.y + y / 2)
+  lazy val center: Point = Point(a.x + x / 2, a.y + y / 2)
 
   def isOrthogonalTo(v: GVector): Boolean = scalarProduct(v) == 0.0
 
@@ -81,4 +80,21 @@ object GVectorMap {
     }.seq
   }
 
+  def matchRectanglesSeq(points: Iterable[Point]): Iterable[Rectangle] = {
+    val vmap = GVectorMap(points).innerMap
+
+    // Fetch list of directions that has more than one entry
+    val eligibleDirs: Iterable[Direction] =
+      vmap.filterSets { case (_: Direction, vs: Set[GVector]) => vs.size > 1 }.keySet
+
+    // From this list, try all associations leading to rectangles
+    eligibleDirs.flatMap { k =>
+      val vectors = vmap.get(k)
+      for {
+        v1 <- vectors
+        v2 <- vectors.tail if v2 != v1
+        r <- Rectangle.rectangleFrom(v1, v2)
+      } yield r
+    }
+  }
 }

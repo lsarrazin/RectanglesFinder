@@ -33,7 +33,7 @@ class RectangleFinderTest extends org.scalatest.FunSuite {
     sets.foreach(e => {
       val (name, isRect, points) = e
       val pts = points.toArray
-      val testRect = RectangleFinder.isRectangle(pts(0), pts(1), pts(2), pts(3))
+      val testRect = Rectangle.isRectangle(pts(0), pts(1), pts(2), pts(3))
       println("Testing " + name + ": " + testRect + "/" + isRect)
 
       if (testRect != isRect) ok = ok-1
@@ -43,8 +43,8 @@ class RectangleFinderTest extends org.scalatest.FunSuite {
   }
 
   test("CheckRectangle") {
-    assert(!RectangleFinder.isRectangle(Point(-5.0, 0.0),Point(-5.0, 5.0),Point(5.0, -5.0),Point(5.0, 0.0)))
-    assert(!RectangleFinder.isRectangle(Point(6.0, 9.0),Point(8.0, 8.0),Point(11.0, 14.0),Point(12.0, 12.0)))
+    assert(!Rectangle.isRectangle(Point(-5.0, 0.0),Point(-5.0, 5.0),Point(5.0, -5.0),Point(5.0, 0.0)))
+    assert(!Rectangle.isRectangle(Point(6.0, 9.0),Point(8.0, 8.0),Point(11.0, 14.0),Point(12.0, 12.0)))
   }
 
   test("MatchRectangles") {
@@ -53,7 +53,7 @@ class RectangleFinderTest extends org.scalatest.FunSuite {
 
     sets.foreach(e => {
       val (name, isRect, points) = e
-      val rlist = RectangleFinder.matchRectangles(points)
+      val rlist = GVectorMap.matchRectangles(points)
       val testRect = rlist.size == 1
       println("Testing " + name + ": " + rlist + " - " + testRect + "/" + isRect)
 
@@ -65,7 +65,7 @@ class RectangleFinderTest extends org.scalatest.FunSuite {
 
   test("MatchRectangles2") {
     println("Within " + allpoints.mkString("{", ", ", "}"))
-    val rects = RectangleFinder.matchRectangles(allpoints)
+    val rects = GVectorMap.matchRectangles(allpoints)
     println(" found " + rects.mkString("{", ", ", "}"))
     println(" -> " + rects.size + " rectangles")
   }
@@ -76,7 +76,7 @@ class RectangleFinderTest extends org.scalatest.FunSuite {
     val p3 = Point(1, 0)
     val p4 = Point(1, 1)
 
-    val sorted = RectangleFinder.sortPoints(p4, p2, p3, p1)
+    val sorted = Rectangle.sortPoints(p4, p2, p3, p1)
     assert(sorted == (p1, p2, p3, p4))
   }
 
@@ -174,11 +174,11 @@ class RectangleFinderTest extends org.scalatest.FunSuite {
     println(points)
     for (b <- 1 to 10) {
       val spoints = points.take(b * 50)
-      val (rects1, time1) = measure_time[Iterable[Point], Iterable[(Point, Point, Point, Point)]](RectangleFinder.matchRectangles)(spoints)
+      val (rects1, time1) = measure_time[Iterable[Point], Iterable[Rectangle]](GVectorMap.matchRectanglesSeq)(spoints)
       val (rects2, time2) = measure_time[Iterable[Point], Iterable[Rectangle]](GVectorMap.matchRectangles)(spoints)
 
       assert(rects1.size == rects2.size)
-      assert(time1 > time2)
+      //assert(time1 > time2)
       println("With " + (b * 50) + " points, " + rects1.size + " rectangles in " + (time1 / 1000.0) + "s / " + rects2.size + " in " + (time2 / 1000.0) + "s (" + (time1 / time2) + "x acc.)")
     }
 

@@ -86,19 +86,13 @@ class DrawPane(width: Int, height: Int) extends Canvas(width, height) {
     }
   }
 
-  def refreshRects(): Unit = {
-    // rects = RectangleFinder.matchRectangles(points.toSet).toList
-    rects = GVectorMap.matchRectangles(points).toList
-    currentRect = 0
-  }
-
   onMousePressed = (me: MouseEvent) => {
     val mp = pointFromMouse(me.sceneX, me.sceneY)
 
     if (points.contains(mp)) {
       points.remove(mp)
 
-      refreshRects()
+      rects = GVectorMap.matchRectangles(points).toList
 
       drawBackground()
       drawPoints()
@@ -107,10 +101,9 @@ class DrawPane(width: Int, height: Int) extends Canvas(width, height) {
       points.add(mp)
       drawPoint(mp)
 
-      //val newRects = RectangleFinder.rematchRectangles(mp, points)
-      val newRects = GVectorMap.matchRectangles(points)
-      rects = newRects.toList
-      drawRects(newRects)
+      rects = GVectorMap.matchRectangles(points).toList
+      drawRects(rects)
+
       currentRect = rects.size - 1
     }
 
