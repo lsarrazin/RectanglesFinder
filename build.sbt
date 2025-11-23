@@ -1,8 +1,8 @@
 name := "RectanglesFinder"
 
-version := "0.1"
+version := "0.2"
 
-scalaVersion := "2.13.1"
+scalaVersion := "2.13.17"
 
 // Append -deprecation to the options passed to the Scala compiler
 scalacOptions ++= Seq("-deprecation", "-feature")

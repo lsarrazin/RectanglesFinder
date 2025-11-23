@@ -22,7 +22,7 @@ class DrawPane(width: Int, height: Int) extends Canvas(width, height) {
     (p.x * scale + width / 2, height / 2 - p.y * scale)
 
   def pointFromMouse(x: Double, y: Double): Point =
-    Point(Math.round((x - width / 2) / scale), Math.round((height / 2 - y) / scale))
+    Point(Math.round((x - width / 2) / scale).toDouble, Math.round((height / 2 - y) / scale).toDouble)
 
   def drawBackground(): Unit = {
     gc.fill = Wheat
